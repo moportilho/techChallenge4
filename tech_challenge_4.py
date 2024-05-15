@@ -9,6 +9,12 @@ Original file is located at
 
 import requests
 import pandas as pd
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.arima.model import ARIMA
 
 api_key = 'llflpOIMWYDhjqfbWUj8bg1bCpdlccFikD1zBJoQ'
 base_url = 'https://api.eia.gov/v2/petroleum/pri/spt/data/'
@@ -41,7 +47,7 @@ df['Price'] = df['value'].astype(float)  # Convertendo 'value' para float
 # Exibindo as primeiras linhas do DataFrame
 print(df[['Date', 'Price']].head())
 
-import matplotlib.pyplot as plt
+
 
 # Análise Exploratória Básica
 print(df.describe())
@@ -55,8 +61,7 @@ plt.ylabel('Preço (USD por barril)')
 plt.grid(True)
 plt.show()
 
-import statsmodels.api as sm
-from statsmodels.tsa.seasonal import seasonal_decompose
+
 
 # Certificando-se de que a data está em formato datetime e definida como índice
 df['Date'] = pd.to_datetime(df['Date'])
@@ -69,7 +74,7 @@ result = seasonal_decompose(df['Price'], model='additive', period=365)  # ajuste
 result.plot()
 plt.show()
 
-from statsmodels.tsa.stattools import adfuller
+
 
 # Teste de Dickey-Fuller
 result_df = adfuller(df['Price'])
@@ -85,7 +90,7 @@ if result_df[1] < 0.05:
 else:
     print("Série Temporal não é estacionária.")
 
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
 
 # Autocorrelação
 plot_acf(df['Price'])
@@ -104,7 +109,7 @@ df = df[~df.index.duplicated(keep='first')]
 # Atribuir uma frequência ao índice de datas - Diária neste caso
 df = df.asfreq('D')
 
-from statsmodels.tsa.arima.model import ARIMA
+
 
 # Configuração e ajuste do modelo ARIMA
 model = ARIMA(df['Price'], order=(1, 0, 1))
@@ -154,7 +159,6 @@ plt.ylabel('Preço (USD por barril)')
 plt.legend()
 plt.show()
 
-import matplotlib.pyplot as plt
 
 # Garantindo que somente as previsões para 2024 são plotadas
 plt.figure(figsize=(10, 5))
