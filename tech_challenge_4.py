@@ -6,6 +6,12 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
 import requests
+import datetime
+
+# Adicionar seletores de intervalo temporal para a visualização dos dados
+st.sidebar.subheader('Selecionar Intervalo Temporal para Visualização')
+start_date = st.sidebar.date_input('Data Inicial', value=pd.to_datetime('2023-01-01'))
+end_date = st.sidebar.date_input('Data Final', value=pd.to_datetime('2024-12-31'))
 
 @st.experimental_memo
 def load_data():
@@ -43,7 +49,6 @@ df = load_data()
 st.write("Visualização dos Dados:", df.head())
 st.write("Descrição Estatística dos Dados:", df.describe())
 
-# Plotting the data
 st.subheader("Análise Temporal dos Preços do Petróleo Brent")
 fig, ax = plt.subplots()
 ax.plot(df.index, df['Price'], marker='o', linestyle='-', color='b')
@@ -52,7 +57,6 @@ ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
 st.pyplot(fig)
 
-# Seasonal decomposition
 st.subheader("Decomposição da Série Temporal")
 result = seasonal_decompose(df['Price'], model='additive', period=365)
 fig2 = result.plot()
@@ -66,7 +70,6 @@ st.write('Critical Values:')
 for key, value in result_df[4].items():
     st.write('\t{}: {:.3f}'.format(key, value))
 
-# Autocorrelação e autocorrelação parcial
 st.subheader("Autocorrelação e Autocorrelação Parcial")
 fig3, ax = plt.subplots()
 plot_acf(df['Price'], ax=ax)
@@ -92,7 +95,6 @@ future['forecast'] = fitted_model.predict(start=start_date, end=end_date, dynami
 # Juntando os dados de treino com as previsões
 full_df = pd.concat([train_df, future])
 
-# Plotando as previsões
 st.subheader("Previsões do Modelo ARIMA para 2024")
 fig5, ax = plt.subplots()
 ax.plot(train_df.index, train_df['Price'], label='Preço Real (até 2023)')
@@ -102,3 +104,15 @@ ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
 ax.legend()
 st.pyplot(fig5)
+
+if start_date < end_date:
+    filtered_df = df.loc[start_date:end_date]
+    st.subheader(f"Análise Temporal dos Preços do Petróleo Brent de {start_date} até {end_date}")
+    fig6, ax = plt.subplots()
+    ax.plot(filtered_df.index, filtered_df['Price'], marker='o', linestyle='-', color='b')
+    ax.set_title('Tendência dos Preços do Petróleo Brent')
+    ax.set_xlabel('Data')
+    ax.set_ylabel('Preço (USD por barril)')
+    st.pyplot(fig6)
+else:
+    st.error('Erro: Data inicial deve ser anterior à data final.')
