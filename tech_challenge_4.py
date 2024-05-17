@@ -45,56 +45,61 @@ def load_data():
 
 df = load_data()
 
-# Displaying data and description
-st.write("Visualização dos Dados:", df.head())
-st.write("Descrição Estatística dos Dados:", df.describe())
+# Filtro para selecionar dados dentro do intervalo escolhido pelo usuário
+filtered_df = df[start_date:end_date]
 
+# Displaying data and description within the selected dates
+st.write("Visualização dos Dados:", filtered_df.head())
+st.write("Descrição Estatística dos Dados:", filtered_df.describe())
+
+# Plotting the data within the selected dates
 st.subheader("Análise Temporal dos Preços do Petróleo Brent")
 fig, ax = plt.subplots()
-ax.plot(df.index, df['Price'], marker='o', linestyle='-', color='b')
+ax.plot(filtered_df.index, filtered_df['Price'], marker='o', linestyle='-', color='b')
 ax.set_title('Tendência dos Preços do Petróleo Brent')
 ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
 st.pyplot(fig)
 
+# Seasonal decomposition for selected dates
 st.subheader("Decomposição da Série Temporal")
-result = seasonal_decompose(df['Price'], model='additive', period=365)
+result = seasonal_decompose(filtered_df['Price'], model='additive', period=min(365, len(filtered_df)))
 fig2 = result.plot()
 st.pyplot(fig2)
 
-# Teste de Dickey-Fuller
-result_df = adfuller(df['Price'])
+# Dickey-Fuller test for selected dates
+result_df = adfuller(filtered_df['Price'])
 st.write('ADF Statistic: {}'.format(result_df[0]))
 st.write('p-value: {}'.format(result_df[1]))
 st.write('Critical Values:')
 for key, value in result_df[4].items():
     st.write('\t{}: {:.3f}'.format(key, value))
 
+# Autocorrelation and partial autocorrelation for selected dates
 st.subheader("Autocorrelação e Autocorrelação Parcial")
 fig3, ax = plt.subplots()
-plot_acf(df['Price'], ax=ax)
+plot_acf(filtered_df['Price'], ax=ax)
 st.pyplot(fig3)
 
 fig4, ax = plt.subplots()
-plot_pacf(df['Price'], ax=ax)
+plot_pacf(filtered_df['Price'], ax=ax)
 st.pyplot(fig4)
 
-# Configuração e ajuste do modelo ARIMA
-train_df = df[df.index < '2024-01-01']
+# ARIMA model configuration and fitting for data before 2024 within selected dates
+train_df = filtered_df[filtered_df.index < '2024-01-01']
 model = ARIMA(train_df['Price'], order=(1, 0, 1))
 fitted_model = model.fit()
 st.write(fitted_model.summary())
 
-# Previsões para 2024
-start_date = '2024-01-01'
-end_date = '2024-12-31'
-dates = pd.date_range(start=start_date, end=end_date, freq='D')
+# Forecasting for 2024
+dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
 future = pd.DataFrame(index=dates, columns=df.columns)
-future['forecast'] = fitted_model.predict(start=start_date, end=end_date, dynamic=True)
+future['forecast'] = fitted_model.predict(start='2024-01-01', end='2024-12-31', dynamic=True)
 
-# Juntando os dados de treino com as previsões
+# Joining training data with forecasts
 full_df = pd.concat([train_df, future])
 
+# Plotting the forecasts
 st.subheader("Previsões do Modelo ARIMA para 2024")
 fig5, ax = plt.subplots()
 ax.plot(train_df.index, train_df['Price'], label='Preço Real (até 2023)')
@@ -104,15 +109,3 @@ ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
 ax.legend()
 st.pyplot(fig5)
-
-if start_date < end_date:
-    filtered_df = df.loc[start_date:end_date]
-    st.subheader(f"Análise Temporal dos Preços do Petróleo Brent de {start_date} até {end_date}")
-    fig6, ax = plt.subplots()
-    ax.plot(filtered_df.index, filtered_df['Price'], marker='o', linestyle='-', color='b')
-    ax.set_title('Tendência dos Preços do Petróleo Brent')
-    ax.set_xlabel('Data')
-    ax.set_ylabel('Preço (USD por barril)')
-    st.pyplot(fig6)
-else:
-    st.error('Erro: Data inicial deve ser anterior à data final.')
