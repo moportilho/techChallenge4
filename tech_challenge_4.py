@@ -98,25 +98,28 @@ st.pyplot(fig4)
 
 # ARIMA model configuration and fitting for data before 2024 within selected dates
 train_df = filtered_df[filtered_df.index < '2024-01-01']
-model = ARIMA(train_df['Price'], order=(1, 0, 1))
-fitted_model = model.fit()
-st.write(fitted_model.summary())
+if not train_df.empty:
+    model = ARIMA(train_df['Price'], order=(1, 0, 1))
+    fitted_model = model.fit()
+    st.write(fitted_model.summary())
 
-# Forecasting for 2024
-dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
-future = pd.DataFrame(index=dates, columns=df.columns)
-future['forecast'] = fitted_model.predict(start='2024-01-01', end='2024-12-31', dynamic=True)
+    # Forecasting for 2024
+    dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
+    future = pd.DataFrame(index=dates, columns=df.columns)
+    future['forecast'] = fitted_model.predict(start='2024-01-01', end='2024-12-31', dynamic=True)
 
-# Joining training data with forecasts
-full_df = pd.concat([train_df, future])
+    # Joining training data with forecasts
+    full_df = pd.concat([train_df, future])
 
-# Plotting the forecasts
-st.subheader("Previsões do Modelo ARIMA para 2024")
-fig5, ax = plt.subplots()
-ax.plot(train_df.index, train_df['Price'], label='Preço Real (até 2023)')
-ax.plot(future.index, future['forecast'], label='Previsão para 2024', color='red')
-ax.set_title('Previsões do Modelo ARIMA para o Petróleo Brent em 2024')
-ax.set_xlabel('Data')
-ax.set_ylabel('Preço (USD por barril)')
-ax.legend()
-st.pyplot(fig5)
+    # Plotting the forecasts
+    st.subheader("Previsões do Modelo ARIMA para 2024")
+    fig5, ax = plt.subplots()
+    ax.plot(train_df.index, train_df['Price'], label='Preço Real (até 2023)')
+    ax.plot(future.index, future['forecast'], label='Previsão para 2024', color='red')
+    ax.set_title('Previsões do Modelo ARIMA para o Petróleo Brent em 2024')
+    ax.set_xlabel('Data')
+    ax.set_ylabel('Preço (USD por barril)')
+    ax.legend()
+    st.pyplot(fig5)
+else:
+    st.error('Erro: O intervalo de datas selecionado não contém dados suficientes para treinar o modelo ARIMA.')
