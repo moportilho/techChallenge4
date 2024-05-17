@@ -61,11 +61,22 @@ ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
 st.pyplot(fig)
 
+# Ajustar dinamicamente o período para decomposição sazonal
+if len(filtered_df) >= 730:
+    period = 365
+elif len(filtered_df) >= 60:
+    period = 30
+else:
+    period = 7
+
 # Seasonal decomposition for selected dates
 st.subheader("Decomposição da Série Temporal")
-result = seasonal_decompose(filtered_df['Price'], model='additive', period=min(365, len(filtered_df)))
-fig2 = result.plot()
-st.pyplot(fig2)
+try:
+    result = seasonal_decompose(filtered_df['Price'], model='additive', period=period)
+    fig2 = result.plot()
+    st.pyplot(fig2)
+except ValueError as e:
+    st.error(f"Erro ao decompor a série temporal: {e}")
 
 # Dickey-Fuller test for selected dates
 result_df = adfuller(filtered_df['Price'])
