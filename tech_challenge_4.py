@@ -7,8 +7,7 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
 import requests
 
-# Função para carregar dados via API com paginação
-@st.cache
+@st.experimental_memo
 def load_data():
     api_key = 'llflpOIMWYDhjqfbWUj8bg1bCpdlccFikD1zBJoQ'
     base_url = 'https://api.eia.gov/v2/petroleum/pri/spt/data/'
@@ -35,15 +34,16 @@ def load_data():
     df.sort_index(inplace=True)
     df = df[~df.index.duplicated(keep='first')]
     df = df.asfreq('D')
+    df['Price'] = df['Price'].interpolate()  # Handling missing values
     return df
 
 df = load_data()
 
-# Exibir os dados e descrição
+# Displaying data and description
 st.write("Visualização dos Dados:", df.head())
 st.write("Descrição Estatística dos Dados:", df.describe())
 
-# Plotagem dos dados
+# Plotting the data
 st.subheader("Análise Temporal dos Preços do Petróleo Brent")
 fig, ax = plt.subplots()
 ax.plot(df.index, df['Price'], marker='o', linestyle='-', color='b')
@@ -52,7 +52,7 @@ ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
 st.pyplot(fig)
 
-# Decomposição da série temporal
+# Seasonal decomposition
 st.subheader("Decomposição da Série Temporal")
 result = seasonal_decompose(df['Price'], model='additive', period=365)
 fig2 = result.plot()
