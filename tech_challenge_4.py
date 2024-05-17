@@ -48,9 +48,12 @@ df = load_data()
 # Filtro para selecionar dados dentro do intervalo escolhido pelo usuário
 filtered_df = df[start_date:end_date]
 
+# Convertendo datas para o formato brasileiro
+filtered_df.index = filtered_df.index.strftime('%d/%m/%Y')
+
 # Displaying data and description within the selected dates
 st.write("Visualização dos Dados:", filtered_df.head())
-st.write("Descrição Estatística dos Dados:", filtered_df.describe())
+st.write("Descrição Estatística dos Dados:", filtered_df[['Price']].describe().rename(columns={'Price': 'Preço'}))
 
 # Plotting the data within the selected dates
 st.subheader("Análise Temporal dos Preços do Petróleo Brent")
@@ -59,6 +62,7 @@ ax.plot(filtered_df.index, filtered_df['Price'], marker='o', linestyle='-', colo
 ax.set_title('Tendência dos Preços do Petróleo Brent')
 ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
+plt.xticks(rotation=45)
 st.pyplot(fig)
 
 # Ajustar dinamicamente o período para decomposição sazonal
@@ -80,9 +84,9 @@ except ValueError as e:
 
 # Dickey-Fuller test for selected dates
 result_df = adfuller(filtered_df['Price'])
-st.write('ADF Statistic: {}'.format(result_df[0]))
-st.write('p-value: {}'.format(result_df[1]))
-st.write('Critical Values:')
+st.write('Estatística ADF: {}'.format(result_df[0]))
+st.write('p-valor: {}'.format(result_df[1]))
+st.write('Valores Críticos:')
 for key, value in result_df[4].items():
     st.write('\t{}: {:.3f}'.format(key, value))
 
@@ -97,7 +101,7 @@ plot_pacf(filtered_df['Price'], ax=ax)
 st.pyplot(fig4)
 
 # ARIMA model configuration and fitting for data before 2024 within selected dates
-train_df = filtered_df[filtered_df.index < '2024-01-01']
+train_df = df[df.index < '2024-01-01']
 if not train_df.empty:
     model = ARIMA(train_df['Price'], order=(1, 0, 1))
     fitted_model = model.fit()
@@ -111,6 +115,9 @@ if not train_df.empty:
     # Joining training data with forecasts
     full_df = pd.concat([train_df, future])
 
+    # Convertendo datas para o formato brasileiro
+    future.index = future.index.strftime('%d/%m/%Y')
+
     # Plotting the forecasts
     st.subheader("Previsões do Modelo ARIMA para 2024")
     fig5, ax = plt.subplots()
@@ -120,6 +127,7 @@ if not train_df.empty:
     ax.set_xlabel('Data')
     ax.set_ylabel('Preço (USD por barril)')
     ax.legend()
+    plt.xticks(rotation=45)
     st.pyplot(fig5)
 else:
     st.error('Erro: O intervalo de datas selecionado não contém dados suficientes para treinar o modelo ARIMA.')
