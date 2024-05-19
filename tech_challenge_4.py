@@ -10,8 +10,8 @@ import datetime
 
 # Adicionar seletores de intervalo temporal para a visualização dos dados
 st.sidebar.subheader('Selecionar Intervalo Temporal para Visualização')
-start_date = st.sidebar.date_input('Data Inicial', value=pd.to_datetime('2023-01-01').date(), format="%d/%m/%Y")
-end_date = st.sidebar.date_input('Data Final', value=pd.to_datetime('2024-12-31').date(), format="%d/%m/%Y")
+start_date = st.sidebar.date_input('Data Inicial', value=pd.to_datetime('2023-01-01'), format="DD/MM/YYYY")
+end_date = st.sidebar.date_input('Data Final', value=pd.to_datetime('2024-12-31'), format="DD/MM/YYYY")
 
 @st.cache_data
 def load_data():
@@ -45,13 +45,14 @@ def load_data():
 
 df = load_data()
 
-# Displaying data and description
-st.write("Visualização dos Dados:", df.head())
-st.write("Descrição Estatística dos Dados:", df[['Preço']].describe().transpose().rename(index={'Preço': 'Preço'}))
+# Exibindo dados e descrição
+st.write("Visualização dos Dados:", df[['Preço']].head())
+st.write("Descrição Estatística dos Dados:", df[['Preço']].describe().transpose())
 
-# Filtered Data
+# Filtrando os dados com base nas datas selecionadas
 filtered_df = df.loc[start_date:end_date]
 
+# Análise Temporal
 st.subheader("Análise Temporal dos Preços do Petróleo Brent")
 fig, ax = plt.subplots()
 ax.plot(filtered_df.index, filtered_df['Preço'], marker='o', linestyle='-', color='b')
@@ -60,7 +61,7 @@ ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
 st.pyplot(fig)
 
-# Seasonal decomposition for selected dates
+# Decomposição da Série Temporal
 st.subheader("Decomposição da Série Temporal")
 result = seasonal_decompose(filtered_df['Preço'], model='additive', period=365)
 fig2 = result.plot()
@@ -71,7 +72,7 @@ fig2.axes[2].set_ylabel('Sazonal')
 fig2.axes[3].set_ylabel('Resíduo')
 st.pyplot(fig2)
 
-# Dickey-Fuller Test
+# Teste de Dickey-Fuller
 st.subheader("Teste de Dickey-Fuller")
 result_df = adfuller(filtered_df['Preço'])
 st.write('Estatística ADF: {}'.format(result_df[0]))
@@ -80,7 +81,7 @@ st.write('Valores Críticos:')
 for key, value in result_df[4].items():
     st.write(f'\t{key}: {value:.3f}')
 
-# Autocorrelation and partial autocorrelation
+# Autocorrelação e Autocorrelação Parcial
 st.subheader("Autocorrelação e Autocorrelação Parcial")
 fig3, ax = plt.subplots()
 plot_acf(filtered_df['Preço'], ax=ax)
@@ -92,7 +93,7 @@ plot_pacf(filtered_df['Preço'], ax=ax)
 ax.set_title('Autocorrelação Parcial')
 st.pyplot(fig4)
 
-# ARIMA model configuration and fitting for data before 2024 within selected range
+# Configuração e ajuste do modelo ARIMA
 train_df = filtered_df[filtered_df.index < '2024-01-01']
 model = ARIMA(train_df['Preço'], order=(1, 0, 1))
 fitted_model = model.fit()
@@ -109,6 +110,7 @@ future['forecast'] = fitted_model.predict(start=start_date_pred, end=end_date_pr
 # Juntando os dados de treino com as previsões
 full_df = pd.concat([train_df, future])
 
+# Plotando previsões do ARIMA
 st.subheader("Previsões do Modelo ARIMA para 2024")
 fig5, ax = plt.subplots()
 ax.plot(train_df.index, train_df['Preço'], label='Preço Real (até 2023)')
