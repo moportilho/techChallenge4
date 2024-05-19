@@ -5,7 +5,10 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.metrics import mean_squared_error
 import requests
+import datetime
 
 # Função para formatar datas no formato brasileiro
 def format_date(date):
@@ -107,20 +110,41 @@ for key, value in result_df[4].items():
 st.subheader("Autocorrelação e Autocorrelação Parcial")
 fig3, ax = plt.subplots()
 plot_acf(filtered_df['Preço'], ax=ax)
-ax.set_title('Autocorrelação')
 st.pyplot(fig3)
 
 fig4, ax = plt.subplots()
 plot_pacf(filtered_df['Preço'], ax=ax)
-ax.set_title('Autocorrelação Parcial')
 st.pyplot(fig4)
 
-# ARIMA model configuration and fitting for data starting from 2013 within selected dates
+# Configuração e ajuste do modelo ARIMA com validação cruzada
 train_df = df[df.index >= '2013-01-01']
+train_df = train_df[train_df.index < '2024-01-01']
+
 if not train_df.empty:
-    model = ARIMA(train_df['Preço'], order=(1, 1, 1))
-    fitted_model = model.fit()
-    st.write(fitted_model.summary().tables[1].as_html().replace("coef", "Coeficiente").replace("std err", "Erro Padrão").replace("z", "z").replace("P>|z|", "P>|z|").replace("[0.025", "[0.025").replace("0.975]", "0.975]"), unsafe_allow_html=True)
+    tscv = TimeSeriesSplit(n_splits=5)
+    best_aic = float("inf")
+    best_order = None
+    best_mdl = None
+    
+    # Procurando pelo melhor conjunto de parâmetros (p,d,q) usando validação cruzada
+    for p in range(5):
+        for d in range(2):
+            for q in range(5):
+                for train_index, test_index in tscv.split(train_df):
+                    train_fold, test_fold = train_df.iloc[train_index], train_df.iloc[test_index]
+                    try:
+                        tmp_mdl = ARIMA(train_fold['Preço'], order=(p, d, q)).fit()
+                        tmp_aic = tmp_mdl.aic
+                        if tmp_aic < best_aic:
+                            best_aic = tmp_aic
+                            best_order = (p, d, q)
+                            best_mdl = tmp_mdl
+                    except:
+                        continue
+    
+    fitted_model = best_mdl
+    st.write(f"Melhor Modelo ARIMA{best_order} - AIC:{best_aic}")
+    st.write(fitted_model.summary().tables[1].as_html(), unsafe_allow_html=True)  # Melhorando a exibição do sumário
 
     # Forecasting for 2024
     dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
