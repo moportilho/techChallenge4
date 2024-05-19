@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from pmdarima import auto_arima
+from statsmodels.tsa.arima.model import ARIMA
 import requests
 import datetime
 
@@ -14,8 +14,8 @@ def format_date(date):
 
 # Adicionar seletores de intervalo temporal para a visualização dos dados
 st.sidebar.subheader('Selecionar Intervalo Temporal para Visualização')
-start_date = st.sidebar.date_input('Data Inicial', value=pd.to_datetime('2023-01-01'))
-end_date = st.sidebar.date_input('Data Final', value=pd.to_datetime('2024-12-31'))
+start_date = st.sidebar.date_input('Data Inicial', value=pd.to_datetime('2023-01-01'), format='DD/MM/YYYY')
+end_date = st.sidebar.date_input('Data Final', value=pd.to_datetime('2024-12-31'), format='DD/MM/YYYY')
 
 @st.cache_data
 def load_data():
@@ -114,25 +114,29 @@ fig4, ax = plt.subplots()
 plot_pacf(filtered_df['Preço'], ax=ax)
 st.pyplot(fig4)
 
-# Configuração e ajuste do modelo ARIMA utilizando auto_arima
+# ARIMA model configuration and fitting for data starting from 2013 within selected dates
 train_df = df[df.index >= '2013-01-01']
 if not train_df.empty:
-    model = auto_arima(train_df['Preço'], seasonal=True, m=12, stepwise=True, trace=True)
-    st.write(model.summary())
+    model = ARIMA(train_df['Preço'], order=(1, 0, 1))
+    fitted_model = model.fit()
+    st.write(fitted_model.summary().tables[1].as_html().replace("coef", "coeficiente").replace("std err", "erro padrão").replace("z", "z").replace("P>|z|", "P>|z|").replace("[0.025", "[0.025").replace("0.975]", "0.975]"), unsafe_allow_html=True)
 
-    # Previsões para 2024
-    forecast = model.predict(n_periods=365)
-    forecast_dates = pd.date_range(start='2024-01-01', periods=365, freq='D')
-    forecast_df = pd.DataFrame(forecast, index=forecast_dates, columns=['Previsão'])
+    # Forecasting for 2024
+    dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
+    future = pd.DataFrame(index=dates, columns=df.columns)
+    future['forecast'] = fitted_model.predict(start='2024-01-01', end='2024-12-31', dynamic=True)
 
-    # Juntando os dados de treino com as previsões
-    full_df = pd.concat([train_df, forecast_df])
+    # Joining training data with forecasts
+    full_df = pd.concat([train_df, future])
 
-    # Plotando as previsões
+    # Convertendo datas para o formato brasileiro
+    future.index = pd.to_datetime(future.index)
+
+    # Plotting the forecasts
     st.subheader("Previsões do Modelo ARIMA para 2024")
     fig5, ax = plt.subplots()
     ax.plot(train_df.index, train_df['Preço'], label='Preço Real (a partir de 2013)')
-    ax.plot(forecast_df.index, forecast_df['Previsão'], label='Previsão para 2024', color='red')
+    ax.plot(future.index, future['forecast'], label='Previsão para 2024', color='red')
     ax.set_title('Previsões do Modelo ARIMA para o Petróleo Brent em 2024')
     ax.set_xlabel('Data')
     ax.set_ylabel('Preço (USD por barril)')
@@ -145,7 +149,7 @@ else:
 # Exibir gráfico apenas com previsões de 2024
 st.subheader("Previsão para 2024")
 fig6, ax = plt.subplots()
-ax.plot(forecast_df.index, forecast_df['Previsão'], label='Previsão para 2024', color='red')
+ax.plot(future.index, future['forecast'], label='Previsão para 2024', color='red')
 ax.set_title('Previsão do Modelo ARIMA para o Petróleo Brent em 2024')
 ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
