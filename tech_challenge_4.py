@@ -204,15 +204,3 @@ Neste projeto, desenvolvemos um modelo preditivo para o preço do petróleo Bren
 ### Conclusão
 
 O modelo desenvolvido demonstra uma capacidade robusta de prever o preço do petróleo Brent com base em dados históricos. No entanto, a precisão das previsões pode ser afetada por eventos externos imprevistos. Portanto, é recomendável que as previsões sejam revisadas e ajustadas regularmente com base em novas informações econômicas e geopolíticas.
-
-### Próximos Passos
-
-1. **Integração de Fatores Externos**:
-    - Incorporar variáveis econômicas e geopolíticas no modelo ARIMA para melhorar a precisão das previsões.
-
-2. **Deploy do Modelo**:
-    - Desenvolver um plano de deploy utilizando ferramentas como Docker para containerização e AWS para hospedagem, garantindo que o modelo possa ser acessado e utilizado em produção de maneira eficiente.
-
-3. **Visualização Interativa**:
-    - Melhorar o dashboard com visualizações interativas adicionais que permitam aos usuários explorar diferentes cenários e entender o impacto de variáveis externas nas previsões.
-""")
