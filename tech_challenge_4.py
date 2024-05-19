@@ -108,18 +108,20 @@ for key, value in result_df[4].items():
 st.subheader("Autocorrelação e Autocorrelação Parcial")
 fig3, ax = plt.subplots()
 plot_acf(filtered_df['Preço'], ax=ax)
+ax.set_title('Autocorrelação')
 st.pyplot(fig3)
 
 fig4, ax = plt.subplots()
 plot_pacf(filtered_df['Preço'], ax=ax)
+ax.set_title('Autocorrelação Parcial')
 st.pyplot(fig4)
 
 # ARIMA model configuration and fitting for data starting from 2013 within selected dates
 train_df = df[df.index >= '2013-01-01']
 if not train_df.empty:
-    model = ARIMA(train_df['Preço'], order=(1, 0, 1))
+    model = ARIMA(train_df['Preço'], order=(1, 1, 1))
     fitted_model = model.fit()
-    st.write(fitted_model.summary().tables[1].as_html().replace("coef", "coeficiente").replace("std err", "erro padrão").replace("z", "z").replace("P>|z|", "P>|z|").replace("[0.025", "[0.025").replace("0.975]", "0.975]"), unsafe_allow_html=True)
+    st.write(fitted_model.summary().tables[1].as_html().replace("coef", "Coeficiente").replace("std err", "Erro Padrão").replace("z", "z").replace("P>|z|", "P>|z|").replace("[0.025", "[0.025").replace("0.975]", "0.975]"), unsafe_allow_html=True)
 
     # Forecasting for 2024
     dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
