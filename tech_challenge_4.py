@@ -114,17 +114,17 @@ fig4, ax = plt.subplots()
 plot_pacf(filtered_df['Preço'], ax=ax)
 st.pyplot(fig4)
 
-# ARIMA model configuration and fitting for data before 2024 within selected dates
-train_df = df[df.index < '2024-01-01']
+# ARIMA model configuration and fitting for data starting from 2013 within selected dates
+train_df = df[df.index >= '2013-01-01']
 if not train_df.empty:
     model = ARIMA(train_df['Preço'], order=(1, 0, 1))
     fitted_model = model.fit()
     st.write(fitted_model.summary().tables[1].as_html().replace("coef", "coeficiente").replace("std err", "erro padrão").replace("z", "z").replace("P>|z|", "P>|z|").replace("[0.025", "[0.025").replace("0.975]", "0.975]"), unsafe_allow_html=True)
 
     # Forecasting for 2024
-    dates = pd.date_range(start='1990-01-01', end='2024-12-31', freq='D')
+    dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
     future = pd.DataFrame(index=dates, columns=df.columns)
-    future['forecast'] = fitted_model.predict(start='1990-01-01', end='2024-12-31', dynamic=True)
+    future['forecast'] = fitted_model.predict(start='2024-01-01', end='2024-12-31', dynamic=True)
 
     # Joining training data with forecasts
     full_df = pd.concat([train_df, future])
@@ -135,7 +135,7 @@ if not train_df.empty:
     # Plotting the forecasts
     st.subheader("Previsões do Modelo ARIMA para 2024")
     fig5, ax = plt.subplots()
-    ax.plot(train_df.index, train_df['Preço'], label='Preço Real (até 2023)')
+    ax.plot(train_df.index, train_df['Preço'], label='Preço Real (a partir de 2013)')
     ax.plot(future.index, future['forecast'], label='Previsão para 2024', color='red')
     ax.set_title('Previsões do Modelo ARIMA para o Petróleo Brent em 2024')
     ax.set_xlabel('Data')
