@@ -17,7 +17,7 @@ st.sidebar.subheader('Selecionar Intervalo Temporal para Visualização')
 start_date = st.sidebar.date_input('Data Inicial', value=pd.to_datetime('2023-01-01'), format='DD/MM/YYYY')
 end_date = st.sidebar.date_input('Data Final', value=pd.to_datetime('2024-12-31'), format='DD/MM/YYYY')
 
-@st.experimental_memo
+@st.cache_data
 def load_data():
     api_key = 'llflpOIMWYDhjqfbWUj8bg1bCpdlccFikD1zBJoQ'
     base_url = 'https://api.eia.gov/v2/petroleum/pri/spt/data/'
@@ -44,7 +44,7 @@ def load_data():
     df.sort_index(inplace=True)
     df = df[~df.index.duplicated(keep='first')]
     df = df.asfreq('D')
-    df['Preço'] = df['Preço'].interpolate()  # Handling missing values
+    df['Preço'] = df['Preço'].interpolate()  # Tratando valores ausentes
     return df
 
 df = load_data()
@@ -117,7 +117,7 @@ if not train_df.empty:
     full_df = pd.concat([train_df, future])
 
     # Convertendo datas para o formato brasileiro
-    future.index = future.index.strftime('%d/%m/%Y')
+    future.index = pd.to_datetime(future.index)
 
     # Plotting the forecasts
     st.subheader("Previsões do Modelo ARIMA para 2024")
