@@ -8,14 +8,10 @@ from statsmodels.tsa.arima.model import ARIMA
 import requests
 import datetime
 
-# Função para formatar datas no formato brasileiro
-def format_date(date):
-    return date.strftime('%d/%m/%Y')
-
 # Adicionar seletores de intervalo temporal para a visualização dos dados
 st.sidebar.subheader('Selecionar Intervalo Temporal para Visualização')
-start_date = st.sidebar.date_input('Data Inicial', value=pd.to_datetime('2023-01-01'), format='DD/MM/YYYY')
-end_date = st.sidebar.date_input('Data Final', value=pd.to_datetime('2024-12-31'), format='DD/MM/YYYY')
+start_date = st.sidebar.date_input('Data Inicial', value=pd.to_datetime('2023-01-01').date(), format="%d/%m/%Y")
+end_date = st.sidebar.date_input('Data Final', value=pd.to_datetime('2024-12-31').date(), format="%d/%m/%Y")
 
 @st.cache_data
 def load_data():
@@ -49,110 +45,86 @@ def load_data():
 
 df = load_data()
 
-# Filtro para selecionar dados dentro do intervalo escolhido pelo usuário
-filtered_df = df[start_date:end_date]
+# Displaying data and description
+st.write("Visualização dos Dados:", df.head())
+st.write("Descrição Estatística dos Dados:", df[['Preço']].describe().transpose().rename(index={'Preço': 'Preço'}))
 
-# Displaying data and description within the selected dates
-st.write("Visualização dos Dados:", filtered_df.head().rename(columns={'period': 'Período', 'duoarea': 'Área', 'area-name': 'Nome da Área', 'product': 'Produto', 'product-name': 'Nome do Produto', 'process': 'Processo', 'process-name': 'Nome do Processo'}))
-st.write("Descrição Estatística dos Dados:", filtered_df[['Preço']].describe().rename(index={'count': 'Contagem', 'mean': 'Média', 'std': 'Desvio Padrão', 'min': 'Mínimo', '25%': '25%', '50%': 'Mediana', '75%': '75%', 'max': 'Máximo'}, columns={'Preço': 'Preço'}))
+# Filtered Data
+filtered_df = df.loc[start_date:end_date]
 
-# Plotting the data within the selected dates
 st.subheader("Análise Temporal dos Preços do Petróleo Brent")
 fig, ax = plt.subplots()
 ax.plot(filtered_df.index, filtered_df['Preço'], marker='o', linestyle='-', color='b')
 ax.set_title('Tendência dos Preços do Petróleo Brent')
 ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
-plt.xticks(rotation=45)
 st.pyplot(fig)
-
-# Ajustar dinamicamente o período para decomposição sazonal
-if len(filtered_df) >= 730:
-    period = 365
-elif len(filtered_df) >= 60:
-    period = 30
-else:
-    period = 7
 
 # Seasonal decomposition for selected dates
 st.subheader("Decomposição da Série Temporal")
-try:
-    result = seasonal_decompose(filtered_df['Preço'], model='additive', period=period)
-    fig2, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, sharex=True, figsize=(10, 8))
-    result.observed.plot(ax=ax1, legend=False)
-    ax1.set_ylabel('Preço')
-    ax1.set_title('Preço')
-    result.trend.plot(ax=ax2, legend=False)
-    ax2.set_ylabel('Tendência')
-    ax2.set_title('Tendência')
-    result.seasonal.plot(ax=ax3, legend=False)
-    ax3.set_ylabel('Sazonalidade')
-    ax3.set_title('Sazonalidade')
-    result.resid.plot(ax=ax4, legend=False)
-    ax4.set_ylabel('Resíduo')
-    ax4.set_title('Resíduo')
-    plt.xticks(rotation=45)
-    st.pyplot(fig2)
-except ValueError as e:
-    st.error(f"Erro ao decompor a série temporal: {e}")
+result = seasonal_decompose(filtered_df['Preço'], model='additive', period=365)
+fig2 = result.plot()
+fig2.suptitle('Decomposição da Série Temporal')
+fig2.axes[0].set_ylabel('Preço')
+fig2.axes[1].set_ylabel('Tendência')
+fig2.axes[2].set_ylabel('Sazonal')
+fig2.axes[3].set_ylabel('Resíduo')
+st.pyplot(fig2)
 
-# Dickey-Fuller test for selected dates
+# Dickey-Fuller Test
+st.subheader("Teste de Dickey-Fuller")
 result_df = adfuller(filtered_df['Preço'])
 st.write('Estatística ADF: {}'.format(result_df[0]))
 st.write('p-valor: {}'.format(result_df[1]))
 st.write('Valores Críticos:')
 for key, value in result_df[4].items():
-    st.write('\t{}: {:.3f}'.format(key, value))
+    st.write(f'\t{key}: {value:.3f}')
 
-# Autocorrelation and partial autocorrelation for selected dates
+# Autocorrelation and partial autocorrelation
 st.subheader("Autocorrelação e Autocorrelação Parcial")
 fig3, ax = plt.subplots()
 plot_acf(filtered_df['Preço'], ax=ax)
+ax.set_title('Autocorrelação')
 st.pyplot(fig3)
 
 fig4, ax = plt.subplots()
 plot_pacf(filtered_df['Preço'], ax=ax)
+ax.set_title('Autocorrelação Parcial')
 st.pyplot(fig4)
 
-# ARIMA model configuration and fitting for data before 2024 within selected dates
-train_df = df[df.index < '2024-01-01']
-if not train_df.empty:
-    model = ARIMA(train_df['Preço'], order=(1, 0, 1))
-    fitted_model = model.fit()
-    st.write(fitted_model.summary().tables[1].as_html(), unsafe_allow_html=True)  # Melhorando a exibição do sumário
+# ARIMA model configuration and fitting for data before 2024 within selected range
+train_df = filtered_df[filtered_df.index < '2024-01-01']
+model = ARIMA(train_df['Preço'], order=(1, 0, 1))
+fitted_model = model.fit()
+st.subheader("Resumo do Modelo ARIMA")
+st.write(fitted_model.summary())
 
-    # Forecasting for 2024
-    dates = pd.date_range(start='2024-01-01', end='2024-12-31', freq='D')
-    future = pd.DataFrame(index=dates, columns=df.columns)
-    future['forecast'] = fitted_model.predict(start='2024-01-01', end='2024-12-31', dynamic=True)
+# Previsões para 2024
+start_date_pred = '2024-01-01'
+end_date_pred = '2024-12-31'
+dates = pd.date_range(start=start_date_pred, end=end_date_pred, freq='D')
+future = pd.DataFrame(index=dates, columns=filtered_df.columns)
+future['forecast'] = fitted_model.predict(start=start_date_pred, end=end_date_pred, dynamic=True)
 
-    # Joining training data with forecasts
-    full_df = pd.concat([train_df, future])
+# Juntando os dados de treino com as previsões
+full_df = pd.concat([train_df, future])
 
-    # Convertendo datas para o formato brasileiro
-    future.index = pd.to_datetime(future.index)
-
-    # Plotting the forecasts
-    st.subheader("Previsões do Modelo ARIMA para 2024")
-    fig5, ax = plt.subplots()
-    ax.plot(train_df.index, train_df['Preço'], label='Preço Real (até 2023)')
-    ax.plot(future.index, future['forecast'], label='Previsão para 2024', color='red')
-    ax.set_title('Previsões do Modelo ARIMA para o Petróleo Brent em 2024')
-    ax.set_xlabel('Data')
-    ax.set_ylabel('Preço (USD por barril)')
-    ax.legend()
-    plt.xticks(rotation=45)
-    st.pyplot(fig5)
-else:
-    st.error('Erro: O intervalo de datas selecionado não contém dados suficientes para treinar o modelo ARIMA.')
-
-# Exibir gráfico apenas com previsões de 2024
-st.subheader("Previsão para 2024")
-fig6, ax = plt.subplots()
+st.subheader("Previsões do Modelo ARIMA para 2024")
+fig5, ax = plt.subplots()
+ax.plot(train_df.index, train_df['Preço'], label='Preço Real (até 2023)')
 ax.plot(future.index, future['forecast'], label='Previsão para 2024', color='red')
+ax.set_title('Previsões do Modelo ARIMA para o Petróleo Brent em 2024')
+ax.set_xlabel('Data')
+ax.set_ylabel('Preço (USD por barril)')
+ax.legend()
+st.pyplot(fig5)
+
+# Gráfico apenas com as previsões para 2024
+st.subheader("Previsão do Modelo ARIMA para 2024")
+fig6, ax = plt.subplots()
+ax.plot(future.index, future['forecast'], color='red', label='Previsão para 2024')
 ax.set_title('Previsão do Modelo ARIMA para o Petróleo Brent em 2024')
 ax.set_xlabel('Data')
 ax.set_ylabel('Preço (USD por barril)')
 ax.legend()
-plt.xticks(rotation=45)
 st.pyplot(fig6)
