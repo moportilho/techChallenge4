@@ -156,3 +156,61 @@ ax.set_ylabel('Preço (USD por barril)')
 ax.legend()
 plt.xticks(rotation=45)
 st.pyplot(fig6)
+
+# Storytelling do Projeto
+st.markdown("""
+## Storytelling do Projeto
+
+### Introdução
+
+Neste projeto, desenvolvemos um modelo preditivo para o preço do petróleo Brent utilizando técnicas de série temporal. O objetivo principal é fornecer previsões diárias do preço do petróleo, o que pode ajudar investidores, economistas e outros stakeholders a tomar decisões informadas. A análise inclui a decomposição da série temporal, testes de estacionariedade, autocorrelações e a aplicação de um modelo ARIMA.
+
+### Contexto Histórico e Geopolítico
+
+1. **Variações de Preço e Eventos Geopolíticos**:
+    - O preço do petróleo é altamente sensível a eventos geopolíticos. Por exemplo, a invasão do Kuwait pelo Iraque em 1990 resultou em um choque no preço do petróleo devido às incertezas sobre o fornecimento. Da mesma forma, as sanções impostas ao Irã ao longo dos anos têm influenciado os preços globais do petróleo.
+    - **Insight**: Nosso modelo mostra que eventos de grande escala, como guerras e sanções, podem causar picos ou quedas abruptas no preço do petróleo.
+
+2. **Crises Econômicas**:
+    - Crises econômicas, como a crise financeira de 2008, impactam diretamente a demanda por petróleo. Durante a crise de 2008, houve uma queda significativa na demanda devido à recessão global, resultando em uma queda drástica nos preços do petróleo.
+    - **Insight**: As previsões do modelo ARIMA podem ser ajustadas para incluir fatores econômicos, fornecendo uma visão mais precisa durante períodos de crise.
+
+3. **Demanda Global por Energia**:
+    - O crescimento econômico de países em desenvolvimento, como China e Índia, tem aumentado a demanda global por energia. O aumento da industrialização e urbanização nesses países tem impulsionado a demanda por petróleo.
+    - **Insight**: O modelo pode ser melhorado incorporando indicadores de crescimento econômico de países emergentes, ajustando as previsões de acordo com as tendências de demanda.
+
+### Análise Técnica
+
+1. **Decomposição da Série Temporal**:
+    - A decomposição da série temporal nos permitiu separar a tendência, a sazonalidade e os resíduos dos dados históricos de preços do petróleo.
+    - **Insight**: Identificamos padrões sazonais que podem ser utilizados para prever flutuações sazonais no preço do petróleo.
+
+2. **Testes de Estacionariedade**:
+    - O teste de Dickey-Fuller foi utilizado para verificar a estacionariedade da série temporal. Embora a série não tenha sido estacionária inicialmente, a diferenciação dos dados tornou-a estacionária, permitindo a aplicação eficaz do modelo ARIMA.
+    - **Insight**: A transformação dos dados é crucial para a precisão do modelo preditivo.
+
+3. **Autocorrelação e Autocorrelação Parcial**:
+    - As funções de autocorrelação e autocorrelação parcial ajudaram a identificar a ordem apropriada dos parâmetros AR e MA para o modelo ARIMA.
+    - **Insight**: A análise de autocorrelação confirmou a presença de correlações significativas em lags específicos, essencial para configurar o modelo.
+
+### Previsões
+
+1. **Previsões do Modelo ARIMA para 2024**:
+    - Utilizamos um modelo ARIMA(1, 0, 1) para prever os preços do petróleo Brent para o ano de 2024. As previsões foram visualizadas em um gráfico comparativo com os preços históricos a partir de 2013.
+    - **Insight**: O modelo previu uma estabilidade relativa nos preços do petróleo para 2024. No entanto, eventos geopolíticos ou econômicos inesperados poderiam alterar significativamente essas previsões.
+
+### Conclusão
+
+O modelo desenvolvido demonstra uma capacidade robusta de prever o preço do petróleo Brent com base em dados históricos. No entanto, a precisão das previsões pode ser afetada por eventos externos imprevistos. Portanto, é recomendável que as previsões sejam revisadas e ajustadas regularmente com base em novas informações econômicas e geopolíticas.
+
+### Próximos Passos
+
+1. **Integração de Fatores Externos**:
+    - Incorporar variáveis econômicas e geopolíticas no modelo ARIMA para melhorar a precisão das previsões.
+
+2. **Deploy do Modelo**:
+    - Desenvolver um plano de deploy utilizando ferramentas como Docker para containerização e AWS para hospedagem, garantindo que o modelo possa ser acessado e utilizado em produção de maneira eficiente.
+
+3. **Visualização Interativa**:
+    - Melhorar o dashboard com visualizações interativas adicionais que permitam aos usuários explorar diferentes cenários e entender o impacto de variáveis externas nas previsões.
+""")
