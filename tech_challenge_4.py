@@ -118,7 +118,7 @@ st.pyplot(fig4)
 # ARIMA model configuration and fitting for data starting from 2013 within selected dates
 train_df = df[df.index >= '2013-01-01']
 if not train_df.empty:
-    model = ARIMA(train_df['Preço'], order=(1, 1, 1))
+    model = ARIMA(train_df['Preço'], order=(5, 1, 0))
     fitted_model = model.fit()
     st.write(fitted_model.summary().tables[1].as_html().replace("coef", "Coeficiente").replace("std err", "Erro Padrão").replace("z", "z").replace("P>|z|", "P>|z|").replace("[0.025", "[0.025").replace("0.975]", "0.975]"), unsafe_allow_html=True)
 
