@@ -9,6 +9,7 @@ from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_squared_error
 import requests
 import datetime
+import time
 
 # Função para formatar datas no formato brasileiro
 def format_date(date):
@@ -125,11 +126,13 @@ if not train_df.empty:
     best_aic = float("inf")
     best_order = None
     best_mdl = None
-    
+    start_time = time.time()
+    time_limit = 60  # Limite de tempo em segundos
+
     # Procurando pelo melhor conjunto de parâmetros (p,d,q) usando validação cruzada
-    for p in range(5):
+    for p in range(3):
         for d in range(2):
-            for q in range(5):
+            for q in range(3):
                 for train_index, test_index in tscv.split(train_df):
                     train_fold, test_fold = train_df.iloc[train_index], train_df.iloc[test_index]
                     try:
@@ -141,7 +144,15 @@ if not train_df.empty:
                             best_mdl = tmp_mdl
                     except:
                         continue
-    
+                    if time.time() - start_time > time_limit:
+                        break
+                if time.time() - start_time > time_limit:
+                    break
+            if time.time() - start_time > time_limit:
+                break
+        if time.time() - start_time > time_limit:
+            break
+
     fitted_model = best_mdl
     st.write(f"Melhor Modelo ARIMA{best_order} - AIC:{best_aic}")
     st.write(fitted_model.summary().tables[1].as_html(), unsafe_allow_html=True)  # Melhorando a exibição do sumário
