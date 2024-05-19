@@ -122,9 +122,9 @@ if not train_df.empty:
     st.write(fitted_model.summary().tables[1].as_html().replace("coef", "coeficiente").replace("std err", "erro padrão").replace("z", "z").replace("P>|z|", "P>|z|").replace("[0.025", "[0.025").replace("0.975]", "0.975]"), unsafe_allow_html=True)
 
     # Forecasting for 2024
-    dates = pd.date_range(start='2013-01-01', end='2024-12-31', freq='D')
+    dates = pd.date_range(start='1990-01-01', end='2024-12-31', freq='D')
     future = pd.DataFrame(index=dates, columns=df.columns)
-    future['forecast'] = fitted_model.predict(start='2013-01-01', end='2024-12-31', dynamic=True)
+    future['forecast'] = fitted_model.predict(start='1990-01-01', end='2024-12-31', dynamic=True)
 
     # Joining training data with forecasts
     full_df = pd.concat([train_df, future])
