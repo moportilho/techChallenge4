@@ -108,10 +108,12 @@ for key, value in result_df[4].items():
 st.subheader("Autocorrelação e Autocorrelação Parcial")
 fig3, ax = plt.subplots()
 plot_acf(filtered_df['Preço'], ax=ax)
+ax.set_title('Autocorrelação')
 st.pyplot(fig3)
 
 fig4, ax = plt.subplots()
 plot_pacf(filtered_df['Preço'], ax=ax)
+ax.set_title('Autocorrelação Parcial')
 st.pyplot(fig4)
 
 # ARIMA model configuration and fitting for data starting from 2013 within selected dates
