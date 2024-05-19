@@ -203,4 +203,4 @@ Neste projeto, desenvolvemos um modelo preditivo para o preço do petróleo Bren
 
 ### Conclusão
 
-O modelo desenvolvido demonstra uma capacidade robusta de prever o preço do petróleo Brent com base em dados históricos. No entanto, a precisão das previsões pode ser afetada por eventos externos imprevistos. Portanto, é recomendável que as previsões sejam revisadas e ajustadas regularmente com base em novas informações econômicas e geopolíticas.
+O modelo desenvolvido demonstra uma capacidade robusta de prever o preço do petróleo Brent com base em dados históricos. No entanto, a precisão das previsões pode ser afetada por eventos externos imprevistos. Portanto, é recomendável que as previsões sejam revisadas e ajustadas regularmente com base em novas informações econômicas e geopolíticas.""")
